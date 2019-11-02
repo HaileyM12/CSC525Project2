@@ -1,12 +1,13 @@
 /*==================================================================================================
- PROGRAMMERS:			Hailey Martinelli, Quy Pham, Nathan Pasley, Evan Politte
- TRACE FOLDEER:			Hailey555, quy123, ?, ?
+ PROGRAMMERS:			Hailey Martinelli, Quy Pham, Nathan Pasley, Evan Politt
+ TRACE FOLDEER:			Hailey555, quy123, Pollitt96, ?
  ASSIGNMENT:			Proj2
  COURSE:				CSC 525
  MODIFIED BY:			N/A
  LAST MODIFIED DATE:	11/11/2019
  DESCRIPTION:			Creating a text editor
  NOTE:					PUT WHAT EACH PERSON DID HERE
+						Pollitt96 - Backspace key works, until it reaches last character, does not erase.
  FILES:					proj2.cpp, (labProject.sln, ...)
  IDE/COMPILER:			MicroSoft Visual Studio 2019
  INSTRUCTION FOR COMPILATION AND EXECUTION:
@@ -18,7 +19,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <GL/glut.h>				// include GLUT library
+#include <glut.h>				// include GLUT library
 using namespace std;
 //***********************************************************************************
 //to make 30 rows and 30 columns, we can specify how big a letter is in pixels and then when 
@@ -76,10 +77,31 @@ void myDisplayCallback()
 
 void myKeyCallback(unsigned char key, int cursorX, int cursorY) 
 {
-	userMessage += key;
-	xMouse = cursorX - 200;
-	yMouse = 200 - cursorY;
-	myDisplayCallback();
+	
+	if (key == 8)
+	{
+		if (userMessage.length() >= 1)
+		{
+			userMessage.pop_back();
+			xMouse = cursorX - 200;
+			yMouse = 200 - cursorY;
+			myDisplayCallback();
+		}
+		else if (userMessage.length() == 0)
+		{
+			userMessage.clear();
+			xMouse = cursorX - 200;
+			yMouse = 200 - cursorY;
+			myDisplayCallback();
+		}
+	}
+	else
+	{
+		userMessage += key;
+		xMouse = cursorX - 200;
+		yMouse = 200 - cursorY;
+		myDisplayCallback();
+	}
 }
 
 void myMovementCallback(int cursorX, int cursorY) 
