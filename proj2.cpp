@@ -19,31 +19,33 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <glut.h>				// include GLUT library
+#include <GL/glut.h>				// include GLUT library
 using namespace std;
 //***********************************************************************************
 //to make 30 rows and 30 columns, we can specify how big a letter is in pixels and then when 
 //creating the window size multiply that pixels size by 30?
 string userMessage;
 string color;
-void * font = GLUT_BITMAP_TIMES_ROMAN_24;
+void* font = GLUT_BITMAP_TIMES_ROMAN_24;
 int xMouse = 0;
 int yMouse = 0;
 int btn;
 bool clicked = false;
+int startX = -180;
+int startY = 180;
 
 
 void drawPoints()
 {
 	glPointSize(7);		// change point size to 10
-	glRasterPos2i(xMouse, yMouse); //starting position of message
+	glRasterPos2i(startX, startY); //starting position of message
 	glColor3i(1, 1, 1);
 
 	for (int i = 0; i < userMessage.length(); i++) {
 		glutBitmapCharacter(font, userMessage[i]);
 	}
 
- 
+
 
 }
 
@@ -69,60 +71,49 @@ void myDisplayCallback()
 		glColor3f(0, 1, 0);
 	}
 	drawPoints();
-	glRasterPos2i(xMouse, yMouse);
-	
+
 
 	glFlush(); // flush out the buffer contents
 }
 
-void myKeyCallback(unsigned char key, int cursorX, int cursorY) 
+void myKeyCallback(unsigned char key, int cursorX, int cursorY)
 {
-	
-	if (key == 8)
-	{
-		if (userMessage.length() >= 1)
-		{
+	if (key == 8) {
+		if (userMessage.length() != 0) {
 			userMessage.pop_back();
-			xMouse = cursorX - 200;
-			yMouse = 200 - cursorY;
-			myDisplayCallback();
-		}
-		else if (userMessage.length() == 0)
-		{
-			userMessage.clear();
-			xMouse = cursorX - 200;
-			yMouse = 200 - cursorY;
-			myDisplayCallback();
 		}
 	}
-	else
-	{
+	else if (key == 13) {
+		startX = -180;
+		startY -= 20;
+	}
+	else {
 		userMessage += key;
-		xMouse = cursorX - 200;
-		yMouse = 200 - cursorY;
-		myDisplayCallback();
 	}
+
+	myDisplayCallback();
+	
 }
 
-void myMovementCallback(int cursorX, int cursorY) 
+/*void myMovementCallback(int cursorX, int cursorY)
 {
 	xMouse = cursorX - 200;
 	yMouse = 200 - cursorY;
 	myDisplayCallback();
-}
+}*/
 
-void colorMenuCallback(int entryId) 
+void colorMenuCallback(int entryId)
 {
 	switch (entryId) {
-		case 1: color = "blue";
-			myDisplayCallback();
-			break;
-		case 2: color = "red";
-			myDisplayCallback();
-			break;
-		case 3: color = "green";
-			myDisplayCallback();
-			break;
+	case 1: color = "blue";
+		myDisplayCallback();
+		break;
+	case 2: color = "red";
+		myDisplayCallback();
+		break;
+	case 3: color = "green";
+		myDisplayCallback();
+		break;
 	}
 }
 
@@ -137,22 +128,22 @@ void saveFile()
 	fout.close();
 }
 
-void fontMenuCallback(int entryId) 
+void fontMenuCallback(int entryId)
 {
 	switch (entryId) {
-		case 1:  font = GLUT_BITMAP_HELVETICA_18;
-			myDisplayCallback();
-			break;
-		case 2: font = GLUT_BITMAP_TIMES_ROMAN_10;
-			myDisplayCallback();
-			break;
-		case 3: font = GLUT_BITMAP_HELVETICA_10;
-			myDisplayCallback();
-			break;
+	case 1:  font = GLUT_BITMAP_HELVETICA_18;
+		myDisplayCallback();
+		break;
+	case 2: font = GLUT_BITMAP_TIMES_ROMAN_10;
+		myDisplayCallback();
+		break;
+	case 3: font = GLUT_BITMAP_HELVETICA_10;
+		myDisplayCallback();
+		break;
 	}
 }
 
-void parentMenuCallback(int entryId) 
+void parentMenuCallback(int entryId)
 {
 	switch (entryId) {
 	case 3: exit(0);
@@ -162,38 +153,38 @@ void parentMenuCallback(int entryId)
 }
 
 //***********************************************************************************
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
-	 glutInitWindowSize(400, 400);				// specify a window size
-	 glutInitWindowPosition(100, 0);			// specify a window position
-	 glutCreateWindow("Simple Point Drawing");	// create a titled window
+	glutInitWindowSize(400, 400);				// specify a window size
+	glutInitWindowPosition(100, 0);			// specify a window position
+	glutCreateWindow("Editor");	// create a titled window
 
-	 myInit();									// setting up
+	myInit();									// setting up
 
-	 int colorMenu = glutCreateMenu(colorMenuCallback);
-	 glutAddMenuEntry("Blue", 1);
-	 glutAddMenuEntry("Red", 2);
-	 glutAddMenuEntry("Green", 3);
+	int colorMenu = glutCreateMenu(colorMenuCallback);
+	glutAddMenuEntry("Blue", 1);
+	glutAddMenuEntry("Red", 2);
+	glutAddMenuEntry("Green", 3);
 
-	 int fontMenu = glutCreateMenu(fontMenuCallback);
-	 glutAddMenuEntry("Helvetica 18", 1);
-	 glutAddMenuEntry("Times 10", 2);
-	 glutAddMenuEntry("Helvatica 10", 3);
+	int fontMenu = glutCreateMenu(fontMenuCallback);
+	glutAddMenuEntry("Helvetica 18", 1);
+	glutAddMenuEntry("Times 10", 2);
+	glutAddMenuEntry("Helvatica 10", 3);
 
-	 glutCreateMenu(parentMenuCallback);
-	 glutAddSubMenu("Color", colorMenu);
-	 glutAddSubMenu("Font", fontMenu);
-	 glutAddMenuEntry("Exit", 3);
-	 glutAddMenuEntry("Save Text", 4);
-	 glutAttachMenu(GLUT_RIGHT_BUTTON);
+	glutCreateMenu(parentMenuCallback);
+	glutAddSubMenu("Color", colorMenu);
+	glutAddSubMenu("Font", fontMenu);
+	glutAddMenuEntry("Exit", 3);
+	glutAddMenuEntry("Save Text", 4);
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
 
 
-	 glutDisplayFunc(myDisplayCallback);		// register a callback
-	 glutKeyboardFunc(myKeyCallback);
-	 //glutMouseFunc(myMouseCallback);
-	 glutMotionFunc(myMovementCallback);
+	glutDisplayFunc(myDisplayCallback);		// register a callback
+	glutKeyboardFunc(myKeyCallback);
+	//glutMouseFunc(myMouseCallback);
+	//glutMotionFunc(myMovementCallback);
 
-	 glutMainLoop();							// get into an infinite loop
+	glutMainLoop();							// get into an infinite loop
 
-	 return 0;
+	return 0;
 }
