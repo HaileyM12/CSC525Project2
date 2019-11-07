@@ -22,7 +22,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <GL/glut.h>				// include GLUT library
+#include <glut.h>				// include GLUT library
 using namespace std;
 //***********************************************************************************
 const int ROW = 30;
