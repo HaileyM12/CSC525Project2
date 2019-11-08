@@ -1,52 +1,65 @@
 /*==================================================================================================
- PROGRAMMERS:			Hailey Martinelli, Quy Pham, Nathan Pasley, Evan Politt
- TRACE FOLDEER:			Hailey555, quy123, Pollitt96, ?
+ PROGRAMMERS:			Hailey Martinelli, Quy Pham, Nathan Pasley, Evan Politte
+ TRACE FOLDEER:			Hailey555, quy123, Pollitt96, pasley3
  ASSIGNMENT:			Proj2
  COURSE:				CSC 525
  MODIFIED BY:			N/A
- LAST MODIFIED DATE:	11/11/2019
+ LAST MODIFIED DATE:	11/10/2019
  DESCRIPTION:			Creating a text editor
- NOTE:					PUT WHAT EACH PERSON DID HERE
-						Pollitt96 - Backspace key works, until it reaches last character, does not erase.
+ NOTE:					Pollitt96 - Backspace key works, until it reaches last character, does not erase.
+						Hailey555 - created menus, saved text to typed.txt file
+						quy123 -
+						? -
  FILES:					proj2.cpp, (labProject.sln, ...)
  IDE/COMPILER:			MicroSoft Visual Studio 2019
  INSTRUCTION FOR COMPILATION AND EXECUTION:
 	1.		Double click on labProject folder
-    2.		Double click on	labProject.sln  to OPEN the project
+	2.		Double click on	labProject.sln  to OPEN the project
 	3.		Press Ctrl+F7					to COMPILE
 	4.		Press Ctrl+F5					to EXECUTE
 ==================================================================================================*/
 #include <string>
+#include <vector>
 #include <iostream>
 #include <fstream>
 #include <GL/glut.h>				// include GLUT library
 using namespace std;
 //***********************************************************************************
-//to make 30 rows and 30 columns, we can specify how big a letter is in pixels and then when 
-//creating the window size multiply that pixels size by 30?
-string userMessage;
+const int ROW = 30;
+const int COL = 30;
+int curRow = 0, curCol = 0;
+vector<vector<int>> userMessage = vector<vector<int>>(ROW, vector<int>(COL));
+
+
+//string userMessage;
 string color;
 void* font = GLUT_BITMAP_TIMES_ROMAN_24;
 int xMouse = 0;
 int yMouse = 0;
 int btn;
 bool clicked = false;
+bool nextLine = false;
 int startX = -180;
 int startY = 180;
+int offset = 7;
 
 
 void drawPoints()
 {
-	glPointSize(7);		// change point size to 10
-	glRasterPos2i(startX, startY); //starting position of message
+	glPointSize(7);
 	glColor3i(1, 1, 1);
+	startY = 180;
+	glRasterPos2i(startX, startY);
 
-	for (int i = 0; i < userMessage.length(); i++) {
-		glutBitmapCharacter(font, userMessage[i]);
+	for (int i = 0; i < 30; i++) {
+		for (int j = 0; j < 30; j++) {
+			glutBitmapCharacter(font, userMessage[i][j]);
+		}
+		startY -= 20;
+
+		glRasterPos2i(startX, startY);
+
 	}
-
-
-
 }
 
 //***********************************************************************************
@@ -78,29 +91,43 @@ void myDisplayCallback()
 
 void myKeyCallback(unsigned char key, int cursorX, int cursorY)
 {
-	if (key == 8) {
-		if (userMessage.length() != 0) {
-			userMessage.pop_back();
+	if (key == 8)
+	{
+		if (sizeof(userMessage) >= 1)
+		{
+			userMessage[curRow].pop_back();
+		}
+		else if (sizeof(userMessage) == 0)
+		{
+			userMessage.clear();
 		}
 	}
 	else if (key == 13) {
-		startX = -180;
 		startY -= 20;
 	}
 	else {
-		userMessage += key;
+		//userMessage += key;
+		if (curCol == 29) {
+			curRow++;
+			curCol = 0;
+		}
+		userMessage[curRow][curCol] = key;
+		curCol++;
 	}
 
 	myDisplayCallback();
-	
 }
 
-/*void myMovementCallback(int cursorX, int cursorY)
+void myMouseCallback(int button, int state, int cursorX, int cursorY)
 {
-	xMouse = cursorX - 200;
-	yMouse = 200 - cursorY;
+	if (button == GLUT_LEFT_BUTTON) {
+		if (sizeof(userMessage) == 0) {
+			startX = cursorX - 200;
+			startY = 200 - cursorY;
+		}
+	}
 	myDisplayCallback();
-}*/
+}
 
 void colorMenuCallback(int entryId)
 {
@@ -117,7 +144,7 @@ void colorMenuCallback(int entryId)
 	}
 }
 
-void saveFile()
+/*void saveFile()
 {
 	ofstream fout;
 	string fileLocation = "C:\\Temp\\", fileName = "typed.txt";
@@ -126,7 +153,7 @@ void saveFile()
 		fout << userMessage[i];
 	}
 	fout.close();
-}
+}*/
 
 void fontMenuCallback(int entryId)
 {
@@ -147,17 +174,18 @@ void parentMenuCallback(int entryId)
 {
 	switch (entryId) {
 	case 3: exit(0);
-	case 4: saveFile();
-		break;
+		//case 4: saveFile();
+		//	break;
 	}
 }
 
 //***********************************************************************************
 int main(int argc, char** argv)
 {
+	glutInit(&argc, argv);
 	glutInitWindowSize(400, 400);				// specify a window size
 	glutInitWindowPosition(100, 0);			// specify a window position
-	glutCreateWindow("Editor");	// create a titled window
+	glutCreateWindow("Text Editor");	// create a titled window
 
 	myInit();									// setting up
 
@@ -181,8 +209,7 @@ int main(int argc, char** argv)
 
 	glutDisplayFunc(myDisplayCallback);		// register a callback
 	glutKeyboardFunc(myKeyCallback);
-	//glutMouseFunc(myMouseCallback);
-	//glutMotionFunc(myMovementCallback);
+	glutMouseFunc(myMouseCallback);
 
 	glutMainLoop();							// get into an infinite loop
 
