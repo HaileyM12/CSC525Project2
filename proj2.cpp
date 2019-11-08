@@ -1,15 +1,14 @@
 /*==================================================================================================
- PROGRAMMERS:			Hailey Martinelli, Quy Pham, Nathan Pasley, Evan Politte
+ PROGRAMMERS:			Hailey Martinelli, Quy Pham, Nathan Pasley, Evan Politt
  TRACE FOLDEER:			Hailey555, quy123, Pollitt96, ?
  ASSIGNMENT:			Proj2
  COURSE:				CSC 525
  MODIFIED BY:			N/A
- LAST MODIFIED DATE:	11/10/2019
+ LAST MODIFIED DATE:	11/11/2019
  DESCRIPTION:			Creating a text editor
- NOTE:					Pollitt96 - Backspace key works, until it reaches last character, does not erase.
-						Hailey555 - created menus, saved text to typed.txt file
-						quy123 - 
-						? - 
+ NOTE:					PUT WHAT EACH PERSON DID HERE
+						Pollitt96 - Backspace key works
+									Working info screen, with visibility working
  FILES:					proj2.cpp, (labProject.sln, ...)
  IDE/COMPILER:			MicroSoft Visual Studio 2019
  INSTRUCTION FOR COMPILATION AND EXECUTION:
@@ -19,45 +18,64 @@
 	4.		Press Ctrl+F5					to EXECUTE
 ==================================================================================================*/
 #include <string>
-#include <vector>
 #include <iostream>
 #include <fstream>
 #include <glut.h>				// include GLUT library
 using namespace std;
 //***********************************************************************************
-const int ROW = 30;
-const int COL = 30;
-int curRow = 0, curCol = 0;
-vector<vector<int>> userMessage = vector<vector<int>>(ROW, vector<int>(COL));
-
-
-//string userMessage;
+//to make 30 rows and 30 columns, we can specify how big a letter is in pixels and then when 
+//creating the window size multiply that pixels size by 30?
+string userMessage;
 string color;
 void * font = GLUT_BITMAP_TIMES_ROMAN_24;
 int xMouse = 0;
 int yMouse = 0;
 int btn;
 bool clicked = false;
-bool nextLine = false;
-int startX = -180;
-int startY = 180;
+bool help = true;
+int win1, win2;
+void* font2 = GLUT_BITMAP_HELVETICA_18;
 
+
+void drawBitmapText(float x, float y, void* font, const char* string)
+{
+	const char* c;
+	glRasterPos2f(x, y);
+
+	for (c = string; *c != '\0'; c++)
+	{
+		glutBitmapCharacter(font, *c);
+	}
+}
 
 void drawPoints()
 {
-	glPointSize(7);		
+	glPointSize(7);		// change point size to 10
+	glRasterPos2i(xMouse, yMouse); //starting position of message
 	glColor3i(1, 1, 1);
-	glRasterPos2i(startX, startY); 
 
-	//for (int r = 0; r < ROW; r++) {
-	//	for (int c = 0; c < COL; c++) {
-	glutBitmapCharacter(font, userMessage[curRow][curCol]);
-	cout << curRow << endl << curCol;
-	//	}
-	//}
-	/*for (int i = 0; i < userMessage.length(); i++) {
+	for (int i = 0; i < userMessage.length(); i++) {
 		glutBitmapCharacter(font, userMessage[i]);
-	}*/
+		if (userMessage.length() >= 30)
+		{
+			glRasterPos2i(xMouse, yMouse + 10);
+		}
+	}
+
+}
+
+void helpText()
+{
+	glColor3f(0, 0, 0);
+	drawBitmapText(-190, 170, (void*)font2, "Left click to set text starting position. If you don't click, text begins in upper left corner");
+	drawBitmapText(-190, 130, (void*)font2, "Type to have it show up on window. Text can contain 30 characters before going to next row.");
+	drawBitmapText(-190, 90, (void*)font2, "There can be up to 30 rows before you can no longer type.");
+	drawBitmapText(-190, 50, (void*)font2, "Left click typed text and drag mouse to move text along the window");
+	drawBitmapText(-190, 10, (void*)font2, "Right click brings up a menu with submenus allowing you to change font and font color");
+	drawBitmapText(-190, -30, (void*)font2, "Press BACKSPACE to go back a character, or previous line if at beginning of a line");
+	drawBitmapText(-190, -70, (void*)font2, "Press ENTER to go down to the beginning of the next row");
+	drawBitmapText(-190, -110, (void*)font2, "To hide help menu, select help menu window and press ESC");
+
 }
 
 //***********************************************************************************
@@ -67,6 +85,11 @@ void myInit()
 	gluOrtho2D(-200, 200, -200, 200);  // specify a viewing area
 }
 
+void myInit2()
+{
+	glClearColor(1, 1, 1, 0);			// specify a background clor: white 
+	gluOrtho2D(-200, 200, -200, 200);  // specify a viewing area
+}
 //***********************************************************************************
 void myDisplayCallback()
 {
@@ -82,48 +105,71 @@ void myDisplayCallback()
 		glColor3f(0, 1, 0);
 	}
 	drawPoints();
+	glRasterPos2i(xMouse, yMouse);
 	
+
+	glFlush(); // flush out the buffer contents
+}
+
+void myDisplayCallback2()
+{
+	glClear(GL_COLOR_BUFFER_BIT);	// draw the background
+	helpText();
 
 	glFlush(); // flush out the buffer contents
 }
 
 void myKeyCallback(unsigned char key, int cursorX, int cursorY) 
 {
-	if (key == 8)
+	
+	if (key == 8)                 //BACKSPACE key
 	{
-		if (sizeof(userMessage) >= 1)
+		if (userMessage.length() >= 1)
 		{
-			userMessage[curRow].pop_back();
+			userMessage.pop_back();
+			xMouse = cursorX - 200;
+			yMouse = 200 - cursorY;
+			myDisplayCallback();
 		}
-		else if (sizeof(userMessage) == 0)
+		else if (userMessage.length() == 0)
 		{
 			userMessage.clear();
+			xMouse = cursorX - 200;
+			yMouse = 200 - cursorY;
+			myDisplayCallback();
 		}
 	}
-	else if (key == 13) {
-		startY -= 20;
-	}
-	else {
-		//userMessage += key;
-		if (curCol == 29) {
-			curRow++;
-			curCol = 0;
-		}
-		userMessage[curRow][curCol] = key;
-		curCol++;
+	else
+	{
+		userMessage += key;
+		xMouse = cursorX - 200;
+		yMouse = 200 - cursorY;
+		myDisplayCallback();
 	}
 
-	myDisplayCallback();
+	switch (key)
+	{
+	case 32:                     //ENTER key
+		
+		break;
+	}
 }
 
-void myMouseCallback(int button, int state, int cursorX, int cursorY)
-{
-	if (button == GLUT_LEFT_BUTTON) {
-		if (sizeof(userMessage) == 0) {
-			startX = cursorX - 200;
-			startY = 200 - cursorY;
-		}
+void myKeyCallback2(unsigned char key, int cursorX, int cursorY) {
+	switch (key)                //ESC key
+	{
+	case 27:
+		help = false;
+		glutHideWindow();
+		myDisplayCallback2();
+		break;
 	}
+}
+
+void myMovementCallback(int cursorX, int cursorY) 
+{
+	xMouse = cursorX - 200;
+	yMouse = 200 - cursorY;
 	myDisplayCallback();
 }
 
@@ -142,7 +188,7 @@ void colorMenuCallback(int entryId)
 	}
 }
 
-/*void saveFile()
+void saveFile()
 {
 	ofstream fout;
 	string fileLocation = "C:\\Temp\\", fileName = "typed.txt";
@@ -151,7 +197,7 @@ void colorMenuCallback(int entryId)
 		fout << userMessage[i];
 	}
 	fout.close();
-}*/
+}
 
 void fontMenuCallback(int entryId) 
 {
@@ -171,9 +217,29 @@ void fontMenuCallback(int entryId)
 void parentMenuCallback(int entryId) 
 {
 	switch (entryId) {
-	case 3: exit(0);
-	//case 4: saveFile();
-	//	break;
+	case 3: help = true;
+		glutSetWindow(win2);
+		glutShowWindow();
+		myDisplayCallback2();
+		break;
+	case 4: exit(0);
+	case 5: saveFile();
+		break;
+	}
+}
+
+void visible(int state)
+{
+	if (help == false)
+	{
+		state == GLUT_NOT_VISIBLE;
+		myDisplayCallback2();
+	}
+	else
+	{
+		help == true;
+		state == GLUT_VISIBLE;
+		myDisplayCallback2();
 	}
 }
 
@@ -181,8 +247,8 @@ void parentMenuCallback(int entryId)
 int main(int argc, char ** argv)
 {
 	 glutInitWindowSize(400, 400);				// specify a window size
-	 glutInitWindowPosition(100, 0);			// specify a window position
-	 glutCreateWindow("Text Editor");	// create a titled window
+	 glutInitWindowPosition(100, 100);			// specify a window position
+	 glutCreateWindow("Simple Point Drawing");	// create a titled window
 
 	 myInit();									// setting up
 
@@ -199,14 +265,28 @@ int main(int argc, char ** argv)
 	 glutCreateMenu(parentMenuCallback);
 	 glutAddSubMenu("Color", colorMenu);
 	 glutAddSubMenu("Font", fontMenu);
-	 glutAddMenuEntry("Exit", 3);
-	 glutAddMenuEntry("Save Text", 4);
+	 glutAddMenuEntry("Help", 3);
+	 glutAddMenuEntry("Exit", 4);
+	 glutAddMenuEntry("Save Text", 5);
 	 glutAttachMenu(GLUT_RIGHT_BUTTON);
 
 
 	 glutDisplayFunc(myDisplayCallback);		// register a callback
 	 glutKeyboardFunc(myKeyCallback);
-	 glutMouseFunc(myMouseCallback);
+	 //glutMouseFunc(myMouseCallback);
+	 glutMotionFunc(myMovementCallback);
+
+
+	 //info window
+	 glutInitWindowSize(800, 400);
+	 glutInitWindowPosition(550, 100);
+	 win2 = glutCreateWindow("Help Window");
+
+	 myInit2();
+
+	 glutDisplayFunc(myDisplayCallback2);
+	 glutKeyboardFunc(myKeyCallback2);
+	 glutVisibilityFunc(visible);
 
 	 glutMainLoop();							// get into an infinite loop
 
