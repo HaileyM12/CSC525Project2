@@ -1,37 +1,36 @@
+
 /*==================================================================================================
  PROGRAMMERS:			Hailey Martinelli, Quy Pham, Nathan Pasley, Evan Politt
- TRACE FOLDEER:			Hailey555, quy123, Pollitt96, ?
+ TRACE FOLDEER:			Hailey555, quy123, Pollitt96, pasley3
  ASSIGNMENT:			Proj2
  COURSE:				CSC 525
  MODIFIED BY:			N/A
- LAST MODIFIED DATE:	11/11/2019
+ LAST MODIFIED DATE:	11/10/2019
  DESCRIPTION:			Creating a text editor
- NOTE:					PUT WHAT EACH PERSON DID HERE
-						Pollitt96 - Backspace key works
-									Working info screen, with visibility working
+ NOTE:					Pollitt96 - Backspace key works, info screen, got color working
+						Hailey555 - created menus, saved text to typed.txt file
+						quy123 -
+						? -
  FILES:					proj2.cpp, (labProject.sln, ...)
  IDE/COMPILER:			MicroSoft Visual Studio 2019
  INSTRUCTION FOR COMPILATION AND EXECUTION:
 	1.		Double click on labProject folder
-    2.		Double click on	labProject.sln  to OPEN the project
+	2.		Double click on	labProject.sln  to OPEN the project
 	3.		Press Ctrl+F7					to COMPILE
 	4.		Press Ctrl+F5					to EXECUTE
 ==================================================================================================*/
 #include <string>
+#include <vector>
 #include <iostream>
 #include <fstream>
-#include <glut.h>				// include GLUT library
+#include <GL/glut.h>				// include GLUT library
 using namespace std;
 //***********************************************************************************
-//to make 30 rows and 30 columns, we can specify how big a letter is in pixels and then when 
-//creating the window size multiply that pixels size by 30?
-string userMessage;
-string color;
-void * font = GLUT_BITMAP_TIMES_ROMAN_24;
-int xMouse = 0;
-int yMouse = 0;
-int btn;
-bool clicked = false;
+int color = 0, fontInteger = 0;
+vector<string> userMessage = { "", "00" };
+void* font = GLUT_BITMAP_TIMES_ROMAN_24;
+int xpos = -180;
+int ypos = 180;
 bool help = true;
 int win1, win2;
 void* font2 = GLUT_BITMAP_HELVETICA_18;
@@ -48,22 +47,6 @@ void drawBitmapText(float x, float y, void* font, const char* string)
 	}
 }
 
-void drawPoints()
-{
-	glPointSize(7);		// change point size to 10
-	glRasterPos2i(xMouse, yMouse); //starting position of message
-	glColor3i(1, 1, 1);
-
-	for (int i = 0; i < userMessage.length(); i++) {
-		glutBitmapCharacter(font, userMessage[i]);
-		if (userMessage.length() >= 30)
-		{
-			glRasterPos2i(xMouse, yMouse + 10);
-		}
-	}
-
-}
-
 void helpText()
 {
 	glColor3f(0, 0, 0);
@@ -78,6 +61,77 @@ void helpText()
 
 }
 
+void changeTextColor(int tempColor) {
+	switch (tempColor) {
+	case 1: glColor3f(0, 0, 1);
+		cout << "its red";
+		break;
+	case 2: glColor3f(1, 0, 0);
+		break;
+	case 3: glColor3f(0, 1, 0);
+		break;
+	case 0: glColor3f(0, 0, 0);
+		break;
+	}
+}
+
+void changeFont(int tempFont) {
+	switch (tempFont) {
+	case 1: font = GLUT_BITMAP_HELVETICA_18;
+		cout << "yay" << endl;
+		break;
+	case 2: font = GLUT_BITMAP_TIMES_ROMAN_10;
+		break;
+	case 3: font = GLUT_BITMAP_HELVETICA_10;
+		break;
+	case 0: font = GLUT_BITMAP_TIMES_ROMAN_24;
+		break;
+	}
+}
+
+void writeText()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	int startX = xpos;
+	int startY = ypos;
+	glRasterPos2i(startX, startY);
+
+	for (int i = 0; i < userMessage.size(); i += 2) {
+		int lastCharPosArr[4];
+		glGetIntegerv(GL_CURRENT_RASTER_POSITION, lastCharPosArr);
+
+		changeTextColor((int)userMessage.at(i + 1)[1] - 48);
+		//cout << "hello" << userMessage.at(i + 1)[1] << endl;
+		glRasterPos2i(lastCharPosArr[0] - 200, startY);
+
+		for (int j = 0; j < userMessage.at(i).size(); j++) {
+			int lastPosX = 180;
+			int lastCharPosArr[4];
+			glGetIntegerv(GL_CURRENT_RASTER_POSITION, lastCharPosArr);
+
+			if (lastCharPosArr[0] - 200 >= lastPosX) {
+				startY -= 25;
+				startX = -180;
+				glRasterPos2i(startX, startY);
+			}
+
+			if (userMessage[i][j] == '\n') {
+				startY -= 20;
+				startX = xpos;
+				glRasterPos2i(startX, startY);
+			}
+			else {
+				changeFont((int)userMessage.at(i + 1)[0] - 48);
+				glutBitmapCharacter(font, userMessage.at(i)[j]);
+			}
+		}
+	}
+
+	glFlush();
+}
+
+
 //***********************************************************************************
 void myInit()
 {
@@ -90,23 +144,14 @@ void myInit2()
 	glClearColor(1, 1, 1, 0);			// specify a background clor: white 
 	gluOrtho2D(-200, 200, -200, 200);  // specify a viewing area
 }
+
 //***********************************************************************************
 void myDisplayCallback()
 {
 	glClear(GL_COLOR_BUFFER_BIT);	// draw the background
 
-	if (color == "blue") {
-		glColor3f(0, 0, 1);
-	}
-	if (color == "red") {
-		glColor3f(1, 0, 0);
-	}
-	if (color == "green") {
-		glColor3f(0, 1, 0);
-	}
-	drawPoints();
-	glRasterPos2i(xMouse, yMouse);
-	
+	writeText();
+
 
 	glFlush(); // flush out the buffer contents
 }
@@ -119,40 +164,42 @@ void myDisplayCallback2()
 	glFlush(); // flush out the buffer contents
 }
 
-void myKeyCallback(unsigned char key, int cursorX, int cursorY) 
+
+void myKeyCallback(unsigned char key, int cursorX, int cursorY)
 {
-	
-	if (key == 8)                 //BACKSPACE key
-	{
-		if (userMessage.length() >= 1)
-		{
+	if (key == 8 && userMessage.at(userMessage.size() - 2).size() >= 0) {
+		string temp;
+
+		if (userMessage.at(userMessage.size() - 2).size() < 1 && userMessage.size() > 2) {
 			userMessage.pop_back();
-			xMouse = cursorX - 200;
-			yMouse = 200 - cursorY;
-			myDisplayCallback();
+			userMessage.pop_back();
 		}
-		else if (userMessage.length() == 0)
-		{
-			userMessage.clear();
-			xMouse = cursorX - 200;
-			yMouse = 200 - cursorY;
-			myDisplayCallback();
+		for (int i = 0; i < userMessage.at(userMessage.size() - 2).size() - 1 && userMessage.at(userMessage.size() - 2).size() > 1; i++) {
+			temp += userMessage.at(userMessage.size() - 2)[i];
 		}
+		userMessage.at(userMessage.size() - 2) = temp;
 	}
-	else
-	{
-		userMessage += key;
-		xMouse = cursorX - 200;
-		yMouse = 200 - cursorY;
-		myDisplayCallback();
+	else {
+		if (color != (int)(userMessage.at(userMessage.size() - 1)[1]) - 48 || fontInteger != (int)(userMessage.at(userMessage.size() - 1)[0]) - 48) {
+			//cout << "hi" << userMessage.at(userMessage.size() - 1)[1] << endl;
+			string temp = "";
+			temp += key;
+			userMessage.push_back(temp);
+			userMessage.push_back(to_string(fontInteger) + to_string(color));
+		}
+		else {
+			if (key == 13) {
+				userMessage.at(userMessage.size() - 2) += "\n";
+			}
+			else {
+				if (key != 8) {
+					userMessage.at(userMessage.size() - 2) += key;
+				}
+			}
+		}
 	}
 
-	switch (key)
-	{
-	case 32:                     //ENTER key
-		
-		break;
-	}
+	writeText();
 }
 
 void myKeyCallback2(unsigned char key, int cursorX, int cursorY) {
@@ -166,29 +213,30 @@ void myKeyCallback2(unsigned char key, int cursorX, int cursorY) {
 	}
 }
 
-void myMovementCallback(int cursorX, int cursorY) 
+
+void myMouseCallback(int button, int state, int cursorX, int cursorY)
 {
-	xMouse = cursorX - 200;
-	yMouse = 200 - cursorY;
-	myDisplayCallback();
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+		xpos = cursorX - 200;
+		ypos = 200 - cursorY;
+	}
+	writeText();
 }
 
-void colorMenuCallback(int entryId) 
+void colorMenuCallback(int entryId)
 {
 	switch (entryId) {
-		case 1: color = "blue";
-			myDisplayCallback();
-			break;
-		case 2: color = "red";
-			myDisplayCallback();
-			break;
-		case 3: color = "green";
-			myDisplayCallback();
-			break;
+	case 1: color = 1;
+		cout << "new color" << endl;
+		break;
+	case 2: color = 2;
+		break;
+	case 3: color = 3;
+		break;
 	}
 }
 
-void saveFile()
+/*void saveFile()
 {
 	ofstream fout;
 	string fileLocation = "C:\\Temp\\", fileName = "typed.txt";
@@ -197,24 +245,25 @@ void saveFile()
 		fout << userMessage[i];
 	}
 	fout.close();
-}
+}*/
 
-void fontMenuCallback(int entryId) 
+void fontMenuCallback(int entryId)
 {
 	switch (entryId) {
-		case 1:  font = GLUT_BITMAP_HELVETICA_18;
-			myDisplayCallback();
-			break;
-		case 2: font = GLUT_BITMAP_TIMES_ROMAN_10;
-			myDisplayCallback();
-			break;
-		case 3: font = GLUT_BITMAP_HELVETICA_10;
-			myDisplayCallback();
-			break;
+	case 1:  font = GLUT_BITMAP_HELVETICA_18;
+		cout << "new font" << endl;
+		fontInteger = 1;
+		break;
+	case 2: font = GLUT_BITMAP_TIMES_ROMAN_10;
+		fontInteger = 2;
+		break;
+	case 3: font = GLUT_BITMAP_HELVETICA_10;
+		fontInteger = 3;
+		break;
 	}
 }
 
-void parentMenuCallback(int entryId) 
+void parentMenuCallback(int entryId)
 {
 	switch (entryId) {
 	case 3: help = true;
@@ -223,8 +272,8 @@ void parentMenuCallback(int entryId)
 		myDisplayCallback2();
 		break;
 	case 4: exit(0);
-	case 5: saveFile();
-		break;
+		//case 5: saveFile();
+		//	break;
 	}
 }
 
@@ -244,51 +293,51 @@ void visible(int state)
 }
 
 //***********************************************************************************
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
-	 glutInitWindowSize(400, 400);				// specify a window size
-	 glutInitWindowPosition(100, 100);			// specify a window position
-	 glutCreateWindow("Simple Point Drawing");	// create a titled window
+	glutInit(&argc, argv);
+	glutInitWindowSize(400, 400);				// specify a window size
+	glutInitWindowPosition(100, 100);			// specify a window position
+	glutCreateWindow("Text Editor");	// create a titled window
 
-	 myInit();									// setting up
+	myInit();									// setting up
 
-	 int colorMenu = glutCreateMenu(colorMenuCallback);
-	 glutAddMenuEntry("Blue", 1);
-	 glutAddMenuEntry("Red", 2);
-	 glutAddMenuEntry("Green", 3);
+	int colorMenu = glutCreateMenu(colorMenuCallback);
+	glutAddMenuEntry("Blue", 1);
+	glutAddMenuEntry("Red", 2);
+	glutAddMenuEntry("Green", 3);
 
-	 int fontMenu = glutCreateMenu(fontMenuCallback);
-	 glutAddMenuEntry("Helvetica 18", 1);
-	 glutAddMenuEntry("Times 10", 2);
-	 glutAddMenuEntry("Helvatica 10", 3);
+	int fontMenu = glutCreateMenu(fontMenuCallback);
+	glutAddMenuEntry("Helvetica 18", 1);
+	glutAddMenuEntry("Times 10", 2);
+	glutAddMenuEntry("Helvatica 10", 3);
 
-	 glutCreateMenu(parentMenuCallback);
-	 glutAddSubMenu("Color", colorMenu);
-	 glutAddSubMenu("Font", fontMenu);
-	 glutAddMenuEntry("Help", 3);
-	 glutAddMenuEntry("Exit", 4);
-	 glutAddMenuEntry("Save Text", 5);
-	 glutAttachMenu(GLUT_RIGHT_BUTTON);
-
-
-	 glutDisplayFunc(myDisplayCallback);		// register a callback
-	 glutKeyboardFunc(myKeyCallback);
-	 //glutMouseFunc(myMouseCallback);
-	 glutMotionFunc(myMovementCallback);
+	glutCreateMenu(parentMenuCallback);
+	glutAddSubMenu("Color", colorMenu);
+	glutAddSubMenu("Font", fontMenu);
+	glutAddMenuEntry("Help", 3);
+	glutAddMenuEntry("Exit", 4);
+	glutAddMenuEntry("Save Text", 5);
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
 
 
-	 //info window
-	 glutInitWindowSize(800, 400);
-	 glutInitWindowPosition(550, 100);
-	 win2 = glutCreateWindow("Help Window");
+	glutDisplayFunc(myDisplayCallback);		// register a callback
+	glutKeyboardFunc(myKeyCallback);
+	//glutMouseFunc(myMouseCallback);
 
-	 myInit2();
 
-	 glutDisplayFunc(myDisplayCallback2);
-	 glutKeyboardFunc(myKeyCallback2);
-	 glutVisibilityFunc(visible);
+	//info screen
+	glutInitWindowSize(800, 400);
+	glutInitWindowPosition(550, 100);
+	win2 = glutCreateWindow("Help Window");
 
-	 glutMainLoop();							// get into an infinite loop
+	myInit2();
 
-	 return 0;
+	glutDisplayFunc(myDisplayCallback2);
+	glutKeyboardFunc(myKeyCallback2);
+	glutVisibilityFunc(visible);
+
+	glutMainLoop();							// get into an infinite loop
+
+	return 0;
 }
